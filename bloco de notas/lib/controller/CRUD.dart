@@ -16,23 +16,12 @@ class CRUD {
 
   save(Note note) async {
     final Database bd = await getDatabase();
-    var itemExists = await find(note.id ?? 0);
 
-    if (itemExists.isEmpty) {
-      return await bd.insert(
+    return await bd.insert(
         _tablename,
         toMap(note),
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
-
-    } else {
-
-      return await bd.update(
-        _tablename,
-        toMap(note),
-        where: '$_id = ?',
-        whereArgs: [note.id],
-      );
-    }
   }
 
   Map<String, dynamic> toMap(Note note) {
@@ -52,12 +41,12 @@ class CRUD {
   List<Note> toList(List<Map<String, dynamic>> listadenotas) {
     final List<Note> notes = [];
     for (Map<String, dynamic> row in listadenotas) {
-      final Note carro = Note(
-        id: int.parse(row[_id]),
-        name: row[_name],
-        note: row[_note],
+      final Note notinha = Note(
+        id: row[_id] ?? 0,
+        name: row[_name] ?? '',
+        note: row[_note] ?? '',
       );
-      notes.add(carro);
+      notes.add(notinha);
     }
     return notes;
   }
@@ -72,7 +61,7 @@ class CRUD {
     return toList(result);
   }
 
-  delete(String id) async {
+  delete(int id) async {
     final Database bd = await getDatabase();
     return bd.delete(
       _tablename,
