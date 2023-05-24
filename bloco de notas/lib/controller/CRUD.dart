@@ -18,18 +18,18 @@ class CRUD {
     final Database bd = await getDatabase();
 
     return await bd.insert(
-        _tablename,
-        toMap(note),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      _tablename,
+      toMap(note),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Map<String, dynamic> toMap(Note note) {
-    final Map<String, dynamic> carMap = {};
-    carMap[_id] = note.id;
-    carMap[_name] = note.name;
-    carMap[_note] = note.note;
-    return carMap;
+    final Map<String, dynamic> noteMap = {};
+    noteMap[_id] = note.id;
+    noteMap[_name] = note.name;
+    noteMap[_note] = note.note;
+    return noteMap;
   }
 
   Future<List<Note>> findAll() async {
@@ -70,4 +70,14 @@ class CRUD {
     );
   }
 
+  update(Note note) async {
+    final db = await getDatabase();
+    final map = toMap(note);
+
+    return db.update(
+      _tablename,
+      map,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
 }

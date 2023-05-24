@@ -38,6 +38,12 @@ class ProviderNotes extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateNote(Note nota) {
+    final db = CRUD();
+    db.update(nota);
+    notifyListeners();
+  }
+
   void refresh() async {
     final db = CRUD();
 

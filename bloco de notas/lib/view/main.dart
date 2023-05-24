@@ -65,7 +65,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
                       final note = state.notes[index];
-                      print(note.name);
                       return _Note(
                         note: note,
                       );
@@ -82,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 MaterialPageRoute(
                   builder: (context) => ChangeNotifierProvider.value(
                     value: state,
-                    child: const _CreateNote(),
+                    child: _ManipulateNote.create(),
                   ),
                 ),
               );
@@ -112,39 +111,80 @@ class _Note extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-        height: 60,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(
-              color: Colors.black,
-            )),
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(
+            color: Colors.black,
+          ),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
+            Expanded(
+              flex: 3,
+              child: Column(
                 children: [
-                  const Text('NOME: '),
-                  Text(note.name ?? ''),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        const Text('NOME: '),
+                        Expanded(
+                          child: Text(
+                            note.name ?? '',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        const Text('NOTA: '),
+                        Expanded(
+                          child: Text(note.note ?? ''),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            Expanded(
               child: Row(
                 children: [
-                  const Text('NOTA: '),
-                  Text(note.note ?? ''),
+                  IconButton(
+                    onPressed: () {
+                      // state.updateNote(note);
+                      // state.refresh();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangeNotifierProvider.value(
+                            value: state,
+                            child: _ManipulateNote.edit(nota: note),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.edit,
+                      size: 20,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      state.removeNote(note);
+                      state.refresh();
+                    },
+                    icon: const Icon(
+                      Icons.delete,
+                      size: 20,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            IconButton(
-              onPressed: () {
-                state.removeNote(note);
-                state.refresh();
-              },
-              icon: const Icon(Icons.delete, size: 20,),
             )
           ],
         ),
@@ -153,18 +193,35 @@ class _Note extends StatelessWidget {
   }
 }
 
-class _CreateNote extends StatelessWidget {
-  const _CreateNote({Key? key}) : super(key: key);
+class _ManipulateNote extends StatelessWidget {
+  _ManipulateNote.create({Key? key})
+      : isEditing = false,
+        super(key: key);
+
+  _ManipulateNote.edit({Key? key, required this.nota})
+      : isEditing = true,
+        super(key: key);
+
+  Note? nota;
+  final bool isEditing;
 
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<ProviderNotes>(context);
 
+    if (nota != null) {
+      state.nameController.text = nota?.name ?? '';
+      state.noteController.text = nota?.note ?? '';
+    } else {
+      state.nameController.clear();
+      state.noteController.clear();
+    }
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
-          'Criar Nota',
+        title: Text(
+          isEditing ? 'Editar nota' : 'Criar Nota',
         ),
       ),
       body: Center(
@@ -176,11 +233,12 @@ class _CreateNote extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: SizedBox(
-                  height: 50,
                   width: 350,
                   child: TextFormField(
                     controller: state.nameController,
                     keyboardType: TextInputType.text,
+                    maxLines: 1,
+                    maxLength: 35,
                     decoration: const InputDecoration(
                       label: Text('Nome'),
                       border: OutlineInputBorder(
@@ -203,11 +261,11 @@ class _CreateNote extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: SizedBox(
-                  height: 50,
                   width: 350,
                   child: TextFormField(
                     controller: state.noteController,
                     keyboardType: TextInputType.text,
+                    maxLines: 5,
                     decoration: const InputDecoration(
                         label: Text('Nota'),
                         border: OutlineInputBorder(
@@ -235,18 +293,25 @@ class _CreateNote extends StatelessWidget {
                   final nome = state.nameController.text.trim();
                   final note = state.noteController.text.trim();
 
-                  final nota = Note(
+                  final newNota = Note(
+                    id: nota?.id,
                     name: nome,
                     note: note,
                   );
 
-                  state.addNote(nota);
+                  if(isEditing){
+                    state.updateNote(newNota);
+                  }else{
+                    state.addNote(newNota);
+                  }
                   state.refresh();
+                  Navigator.pop(context);
                   state.nameController.clear();
                   state.noteController.clear();
-                  Navigator.pop(context);
                 },
-                child: const Text('ADD'),
+                child: Text(
+                  isEditing ? 'EDIT' : 'ADD',
+                ),
               ),
             ],
           ),
