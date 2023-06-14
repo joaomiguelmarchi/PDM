@@ -80,4 +80,18 @@ class CRUD {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
+  Future<List<Note>> search(String search) async {
+    final bd = await getDatabase();
+
+    final query = '''
+    SELECT * FROM $_tablename WHERE $_name LIKE '%$search%';
+    ''';
+
+    final result = await bd.rawQuery(
+      query,
+    );
+
+    return toList(result);
+  }
 }

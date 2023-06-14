@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -49,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  const _Search(),
                   const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
@@ -60,7 +63,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                   ),
-                  ListView.builder(
+                  (state.isLoading)
+                  ? const CircularProgressIndicator()
+                  : ListView.builder(
                     itemCount: state.notes.length,
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
@@ -299,9 +304,9 @@ class _ManipulateNote extends StatelessWidget {
                     note: note,
                   );
 
-                  if(isEditing){
+                  if (isEditing) {
                     state.updateNote(newNota);
-                  }else{
+                  } else {
                     state.addNote(newNota);
                   }
                   state.refresh();
@@ -315,6 +320,66 @@ class _ManipulateNote extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Search extends StatelessWidget {
+  const _Search({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final state = Provider.of<ProviderNotes>(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+        height: 50,
+        width: 380,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 10,
+              child: TextFormField(
+                decoration: const InputDecoration(
+                  label: Text('Pesquisa'),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                maxLines: 1,
+                controller: state.searchController,
+                onChanged: (value) {
+                  if (value.trim() == '' || value.isEmpty) {
+                    state.refresh();
+                    return;
+                  }
+                  Timer(
+                    const Duration(milliseconds: 300),
+                    () {
+                      state.search(value);
+                    },
+                  );
+                },
+              ),
+            ),
+            if(state.searchController.text.trim() != '' || state.searchController.text.isNotEmpty)
+            Expanded(
+              child: IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: (){
+                  print('AA');
+                  state.searchController.clear();
+                  state.refresh();
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
